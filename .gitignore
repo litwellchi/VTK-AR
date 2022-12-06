@@ -1,0 +1,4 @@
+/vtk-js/*
+/node_modules/*
+app.js
+package**
