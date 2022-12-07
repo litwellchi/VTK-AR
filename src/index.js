@@ -55,6 +55,7 @@ const ofun = vtkPiecewiseFunction.newInstance();
 
 const {
   fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
+  // fileURL = './tiny-image.vti',
   // fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download',
 } = vtkURLExtract.extractURLParameters();
 
@@ -71,7 +72,6 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   const dataArray =
     data.getPointData().getScalars() || data.getPointData().getArrays()[0];
   const dataRange = dataArray.getRange();
-
   // Restyle visual appearance
   const sampleDistance =
     0.7 *
@@ -83,9 +83,9 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
     );
   mapper.setSampleDistance(sampleDistance);
 
-  ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 0.3);
+  ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 1);
   ctfun.addRGBPoint(dataRange[1], 1.0, 1.0, 1.0);
-  ofun.addPoint(dataRange[0], 0.0);
+  ofun.addPoint(dataRange[0], 1.0);
   ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
   ofun.addPoint(dataRange[1], 0.5);
   actor.getProperty().setRGBTransferFunction(0, ctfun);
@@ -124,6 +124,8 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
       }
     });
   }
+
+  // click button to start the environment
   xrButton.addEventListener('click', () => {
     if (xrButton.textContent === enterText) {
       if (xrSessionType === AR) {
