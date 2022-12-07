@@ -3,4 +3,4 @@
 
 npm install --save-dev css-loader html-loader
 
-*run by npm run start
+*run by: npm run start

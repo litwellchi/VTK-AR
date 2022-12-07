@@ -1,11 +1,11 @@
-import {WebXRButton} from '../dist/js/util/webxr-button.js';
-import {Scene} from '../dist/js/render/scenes/scene.js';
-import {Renderer, createWebGLContext} from '../dist/js/render/core/renderer.js';
-import {Node} from '../dist/js/render/core/node.js';
-import {Gltf2Node} from '../dist/js/render/nodes/gltf2.js';
-import {DropShadowNode} from '../dist/js/render/nodes/drop-shadow.js';
-import {vec3} from '../dist/js/render/math/gl-matrix.js';
-import {Ray} from '../dist/js/render/math/ray.js';
+import {WebXRButton} from './js/util/webxr-button.js';
+import {Scene} from './js/render/scenes/scene.js';
+import {Renderer, createWebGLContext} from './js/render/core/renderer.js';
+import {Node} from './js/render/core/node.js';
+import {Gltf2Node} from './js/render/nodes/gltf2.js';
+import {DropShadowNode} from './js/render/nodes/drop-shadow.js';
+import {vec3} from './js/render/math/gl-matrix.js';
+import {Ray} from './js/render/math/ray.js';
 
 // XR globals.
 let xrButton = null;
@@ -19,6 +19,7 @@ let renderer = null;
 let scene = new Scene();
 scene.enableStats(false);
 
+// add objects
 let arObject = new Node();
 arObject.visible = false;
 scene.addNode(arObject);
