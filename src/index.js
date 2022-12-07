@@ -1,161 +1,173 @@
-import { mat4 } from 'gl-matrix';
-import '@kitware/vtk.js/favicon';
+import {WebXRButton} from '../dist/js/util/webxr-button.js';
+import {Scene} from '../dist/js/render/scenes/scene.js';
+import {Renderer, createWebGLContext} from '../dist/js/render/core/renderer.js';
+import {Node} from '../dist/js/render/core/node.js';
+import {Gltf2Node} from '../dist/js/render/nodes/gltf2.js';
+import {DropShadowNode} from '../dist/js/render/nodes/drop-shadow.js';
+import {vec3} from '../dist/js/render/math/gl-matrix.js';
+import {Ray} from '../dist/js/render/math/ray.js';
 
-// Load the rendering pieces we want to use (for both WebGL and WebGPU)
-import '@kitware/vtk.js/Rendering/Profiles/Volume';
+// XR globals.
+let xrButton = null;
+let xrRefSpace = null;
+let xrViewerSpace = null;
+let xrHitTestSource = null;
 
-// Force DataAccessHelper to have access to various data source
-import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
-import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+// WebGL scene globals.
+let gl = null;
+let renderer = null;
+let scene = new Scene();
+scene.enableStats(false);
 
-import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
-import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
-import vtkImageReslice from '@kitware/vtk.js/Imaging/Core/ImageReslice';
-import vtkMath from '@kitware/vtk.js/Common/Core/Math';
-import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
-import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract';
-import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
-import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
-import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
+let arObject = new Node();
+arObject.visible = false;
+scene.addNode(arObject);
 
-import './WebXRVolume.module.css';
+let flower = new Gltf2Node({url: 'media/gltf/sunflower/sunflower.gltf'});
+arObject.addNode(flower);
 
-// ----------------------------------------------------------------------------
-// Standard rendering code setup
-// ----------------------------------------------------------------------------
+let reticle = new Gltf2Node({url: 'media/gltf/reticle/reticle.gltf'});
+reticle.visible = false;
+scene.addNode(reticle);
 
-const background = [0, 0, 0];
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-  background,
-});
-const renderer = fullScreenRenderer.getRenderer();
-const renderWindow = fullScreenRenderer.getRenderWindow();
+// Having a really simple drop shadow underneath an object helps ground
+// it in the world without adding much complexity.
+let shadow = new DropShadowNode();
+vec3.set(shadow.scale, 0.15, 0.15, 0.15);
+arObject.addNode(shadow);
 
-// ----------------------------------------------------------------------------
-// Set up pipeline objects
-// ----------------------------------------------------------------------------
+const MAX_FLOWERS = 30;
+let flowers = [];
 
-const vtiReader = vtkXMLImageDataReader.newInstance();
-const reslicer = vtkImageReslice.newInstance();
-const actor = vtkVolume.newInstance();
-const mapper = vtkVolumeMapper.newInstance();
-reslicer.setInputConnection(vtiReader.getOutputPort());
-mapper.setInputConnection(reslicer.getOutputPort());
-actor.setMapper(mapper);
-renderer.addVolume(actor);
+// Ensure the background is transparent for AR.
+scene.clear = false;
 
-// create color and opacity transfer functions
-const ctfun = vtkColorTransferFunction.newInstance();
-const ofun = vtkPiecewiseFunction.newInstance();
+function initXR() {
+  xrButton = new WebXRButton({
+    onRequestSession: onRequestSession,
+    onEndSession: onEndSession,
+    textEnterXRTitle: "START AR",
+    textXRNotFoundTitle: "AR NOT FOUND",
+    textExitXRTitle: "EXIT  AR",
+  });
+  document.querySelector('header').appendChild(xrButton.domElement);
 
-// ----------------------------------------------------------------------------
-// Example code
-// ----------------------------------------------------------------------------
-
-const {
-  fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
-  // fileURL = './tiny-image.vti',
-  // fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download',
-} = vtkURLExtract.extractURLParameters();
-
-HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
-  // Read data
-  vtiReader.parseAsArrayBuffer(fileContents);
-
-  // Rotate 90 degrees forward so that default head volume faces camera
-  const rotateX = mat4.create();
-  mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(90), [-1, 0, 0]);
-  reslicer.setResliceAxes(rotateX);
-
-  const data = reslicer.getOutputData(0);
-  const dataArray =
-    data.getPointData().getScalars() || data.getPointData().getArrays()[0];
-  const dataRange = dataArray.getRange();
-  // Restyle visual appearance
-  const sampleDistance =
-    0.7 *
-    Math.sqrt(
-      data
-        .getSpacing()
-        .map((v) => v * v)
-        .reduce((a, b) => a + b, 0)
-    );
-  mapper.setSampleDistance(sampleDistance);
-
-  ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 1);
-  ctfun.addRGBPoint(dataRange[1], 1.0, 1.0, 1.0);
-  ofun.addPoint(dataRange[0], 1.0);
-  ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
-  ofun.addPoint(dataRange[1], 0.5);
-  actor.getProperty().setRGBTransferFunction(0, ctfun);
-  actor.getProperty().setScalarOpacity(0, ofun);
-  actor.getProperty().setInterpolationTypeToLinear();
-
-  // Set up rendering
-  renderer.resetCamera();
-  renderWindow.render();
-
-  // Add button to launch AR (default) or VR scene
-  const VR = 1;
-  const AR = 2;
-  let xrSessionType = 0;
-  const xrButton = document.createElement('button');
-  let enterText = 'XR not available!';
-  const exitText = 'Exit XR';
-  xrButton.textContent = enterText;
-  if (
-    navigator.xr !== undefined &&
-    fullScreenRenderer.getApiSpecificRenderWindow().getXrSupported()
-  ) {
-    navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
-      if (arSupported) {
-        xrSessionType = AR;
-        enterText = 'Start AR';
-        xrButton.textContent = enterText;
-      } else {
-        navigator.xr.isSessionSupported('immersive-vr').then((vrSupported) => {
-          if (vrSupported) {
-            xrSessionType = VR;
-            enterText = 'Start VR';
-            xrButton.textContent = enterText;
-          }
-        });
-      }
+  if (navigator.xr) {
+    navigator.xr.isSessionSupported('immersive-ar')
+                .then((supported) => {
+      xrButton.enabled = supported;
     });
   }
+}
 
-  // click button to start the environment
-  xrButton.addEventListener('click', () => {
-    if (xrButton.textContent === enterText) {
-      if (xrSessionType === AR) {
-        fullScreenRenderer.setBackground([0, 0, 0, 0]);
-      }
-      fullScreenRenderer
-        .getApiSpecificRenderWindow()
-        .startXR(xrSessionType === AR);
-      xrButton.textContent = exitText;
-    } else {
-      fullScreenRenderer.setBackground([...background, 255]);
-      fullScreenRenderer
-        .getApiSpecificRenderWindow()
-        .stopXR(xrSessionType === AR);
-      xrButton.textContent = enterText;
-    }
+function onRequestSession() {
+  return navigator.xr.requestSession('immersive-ar', {requiredFeatures: ['local', 'hit-test']})
+                     .then((session) => {
+    xrButton.setSession(session);
+    onSessionStarted(session);
   });
-  xrButton.style.position = "absolute";
-  document.querySelector('.content').appendChild(xrButton);
-});
+}
 
-// -----------------------------------------------------------
-// Make some variables global so that you can inspect and
-// modify objects in your browser's developer console:
-// -----------------------------------------------------------
+function onSessionStarted(session) {
+  session.addEventListener('end', onSessionEnded);
+  session.addEventListener('select', onSelect);
 
-global.source = vtiReader;
-global.mapper = mapper;
-global.actor = actor;
-global.ctfun = ctfun;
-global.ofun = ofun;
-global.renderer = renderer;
-global.renderWindow = renderWindow;
+  if (!gl) {
+    gl = createWebGLContext({
+      xrCompatible: true
+    });
+
+    renderer = new Renderer(gl);
+
+    scene.setRenderer(renderer);
+  }
+
+  session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
+
+  // In this sample we want to cast a ray straight out from the viewer's
+  // position and render a reticle where it intersects with a real world
+  // surface. To do this we first get the viewer space, then create a
+  // hitTestSource that tracks it.
+  session.requestReferenceSpace('viewer').then((refSpace) => {
+    xrViewerSpace = refSpace;
+    session.requestHitTestSource({ space: xrViewerSpace }).then((hitTestSource) => {
+      xrHitTestSource = hitTestSource;
+    });
+  });
+
+  session.requestReferenceSpace('local').then((refSpace) => {
+    xrRefSpace = refSpace;
+
+    session.requestAnimationFrame(onXRFrame);
+  });
+}
+
+function onEndSession(session) {
+  xrHitTestSource.cancel();
+  xrHitTestSource = null;
+  session.end();
+}
+
+function onSessionEnded(event) {
+  xrButton.setSession(null);
+}
+
+// Adds a new object to the scene at the
+// specified transform.
+function addARObjectAt(matrix) {
+  let newFlower = arObject.clone();
+  newFlower.visible = true;
+  newFlower.matrix = matrix;
+  scene.addNode(newFlower);
+
+  flowers.push(newFlower);
+
+  // For performance reasons if we add too many objects start
+  // removing the oldest ones to keep the scene complexity
+  // from growing too much.
+  if (flowers.length > MAX_FLOWERS) {
+    let oldFlower = flowers.shift();
+    scene.removeNode(oldFlower);
+  }
+}
+
+let rayOrigin = vec3.create();
+let rayDirection = vec3.create();
+function onSelect(event) {
+  if (reticle.visible) {
+    // The reticle should already be positioned at the latest hit point, 
+    // so we can just use it's matrix to save an unnecessary call to 
+    // event.frame.getHitTestResults.
+    addARObjectAt(reticle.matrix);
+  }
+}
+
+// Called every time a XRSession requests that a new frame be drawn.
+function onXRFrame(t, frame) {
+  let session = frame.session;
+  let pose = frame.getViewerPose(xrRefSpace);
+
+  reticle.visible = false;
+
+  // If we have a hit test source, get its results for the frame
+  // and use the pose to display a reticle in the scene.
+  if (xrHitTestSource && pose) {
+    let hitTestResults = frame.getHitTestResults(xrHitTestSource);
+    if (hitTestResults.length > 0) {
+      let pose = hitTestResults[0].getPose(xrRefSpace);
+      reticle.visible = true;
+      reticle.matrix = pose.transform.matrix;
+    }
+  }
+
+  scene.startFrame();
+
+  session.requestAnimationFrame(onXRFrame);
+
+  scene.drawXRFrame(frame, pose);
+
+  scene.endFrame();
+}
+
+// Start the XR application.
+initXR();

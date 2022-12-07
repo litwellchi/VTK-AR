@@ -25,59 +25,64 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
     <meta name='viewport' content='width=device-width, initial-scale=1, user-scalable=no'>
     <meta name='mobile-web-app-capable' content='yes'>
     <meta name='apple-mobile-web-app-capable' content='yes'>
-    <link rel='icon' type='../webxr-samples/image/png' sizes='32x32' href='favicon-32x32.png'>
-    <link rel='icon' type='../webxr-samples/image/png' sizes='96x96' href='favicon-96x96.png'>
-    <link rel='stylesheet' href='../webxr-samples/css/common.css'>
+    <link rel='stylesheet' href='css/common.css'>
 
-    <title>Immersive AR Session</title>
+    <title>Hit Test</title>
   </head>
   <body>
     <header>
       <details open>
-        <summary>Immersive AR Session</summary>
+        <summary>Hit Test</summary>
         <p>
-          This sample demonstrates how to use an 'immersive-ar' XRSession to
-          present a simple WebGL scene to a transparent or passthrough XR
-          device. The logic is largely the same as the corresponding VR sample,
-          with the primary difference being that no background is rendered and
-          the model is scaled down for easier viewing in a real-world space.
-          <a class="back" href="../webxr-samples/">Back</a>
+          This sample demonstrates the use of hit testing to place virtual objects on real-world surfaces.
+          <a class="back" href="./">Back</a>
         </p>
       </details>
     </header>
     <script type="module">
-      import {WebXRButton} from '../webxr-samples/js/util/webxr-button.js';
-      import {Scene} from '../webxr-samples/js/render/scenes/scene.js';
-      import {Renderer, createWebGLContext} from '../webxr-samples/js/render/core/renderer.js';
-      import {SkyboxNode} from '../webxr-samples/js/render/nodes/skybox.js';
-      import {InlineViewerHelper} from '../webxr-samples/js/util/inline-viewer-helper.js';
-      import {Gltf2Node} from '../webxr-samples/js/render/nodes/gltf2.js';
-      import {QueryArgs} from '../webxr-samples/js/util/query-args.js';
-
-      // If requested, use the polyfill to provide support for mobile devices
-      // and devices which only support WebVR.
-      import WebXRPolyfill from '../webxr-samples/js/third-party/webxr-polyfill/build/webxr-polyfill.module.js';
-      if (QueryArgs.getBool('usePolyfill', true)) {
-        let polyfill = new WebXRPolyfill();
-      }
+      import {WebXRButton} from './js/util/webxr-button.js';
+      import {Scene} from './js/render/scenes/scene.js';
+      import {Renderer, createWebGLContext} from './js/render/core/renderer.js';
+      import {Node} from './js/render/core/node.js';
+      import {Gltf2Node} from './js/render/nodes/gltf2.js';
+      import {DropShadowNode} from './js/render/nodes/drop-shadow.js';
+      import {vec3} from './js/render/math/gl-matrix.js';
+      import {Ray} from './js/render/math/ray.js';
 
       // XR globals.
       let xrButton = null;
-      let xrImmersiveRefSpace = null;
-      let inlineViewerHelper = null;
+      let xrRefSpace = null;
+      let xrViewerSpace = null;
+      let xrHitTestSource = null;
 
       // WebGL scene globals.
       let gl = null;
       let renderer = null;
       let scene = new Scene();
-      let solarSystem = new Gltf2Node({url: '../webxr-samples/media/gltf/space/space.gltf'});
-      // The solar system is big (citation needed). Scale it down so that users
-      // can move around the planets more easily.
-      solarSystem.scale = [0.1, 0.1, 0.1];
-      scene.addNode(solarSystem);
-      // Still adding a skybox, but only for the benefit of the inline view.
-      let skybox = new SkyboxNode({url: '../webxr-samples/media/textures/milky-way-4k.png'});
-      scene.addNode(skybox);
+      scene.enableStats(false);
+
+      let arObject = new Node();
+      arObject.visible = false;
+      scene.addNode(arObject);
+
+      let flower = new Gltf2Node({url: 'media/gltf/sunflower/sunflower.gltf'});
+      arObject.addNode(flower);
+
+      let reticle = new Gltf2Node({url: 'media/gltf/reticle/reticle.gltf'});
+      reticle.visible = false;
+      scene.addNode(reticle);
+
+      // Having a really simple drop shadow underneath an object helps ground
+      // it in the world without adding much complexity.
+      let shadow = new DropShadowNode();
+      vec3.set(shadow.scale, 0.15, 0.15, 0.15);
+      arObject.addNode(shadow);
+
+      const MAX_FLOWERS = 30;
+      let flowers = [];
+
+      // Ensure the background is transparent for AR.
+      scene.clear = false;
 
       function initXR() {
         xrButton = new WebXRButton({
@@ -90,93 +95,112 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
         document.querySelector('header').appendChild(xrButton.domElement);
 
         if (navigator.xr) {
-          // Checks to ensure that 'immersive-ar' mode is available, and only
-          // enables the button if so.
-          navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+          navigator.xr.isSessionSupported('immersive-ar')
+                      .then((supported) => {
             xrButton.enabled = supported;
           });
-
-          navigator.xr.requestSession('inline').then(onSessionStarted);
         }
       }
 
       function onRequestSession() {
-        // Requests an 'immersive-ar' session, which ensures that the users
-        // environment will be visible either via video passthrough or a
-        // transparent display. This may be presented either in a headset or
-        // fullscreen on a mobile device.
-        return navigator.xr.requestSession('immersive-ar')
-            .then((session) => {
-              xrButton.setSession(session);
-              session.isImmersive = true;
-              onSessionStarted(session);
-            });
-      }
-
-      function initGL() {
-        if (gl)
-          return;
-
-        gl = createWebGLContext({
-          xrCompatible: true
+        return navigator.xr.requestSession('immersive-ar', {requiredFeatures: ['local', 'hit-test']})
+                           .then((session) => {
+          xrButton.setSession(session);
+          onSessionStarted(session);
         });
-        document.body.appendChild(gl.canvas);
-
-        function onResize() {
-          gl.canvas.width = gl.canvas.clientWidth * window.devicePixelRatio;
-          gl.canvas.height = gl.canvas.clientHeight * window.devicePixelRatio;
-        }
-        window.addEventListener('resize', onResize);
-        onResize();
-
-        renderer = new Renderer(gl);
-
-        scene.setRenderer(renderer);
       }
 
       function onSessionStarted(session) {
         session.addEventListener('end', onSessionEnded);
+        session.addEventListener('select', onSelect);
 
-        if (session.isImmersive) {
-          // When in 'immersive-ar' mode don't draw an opaque background because
-          // we want the real world to show through.
-          skybox.visible = false;
+        if (!gl) {
+          gl = createWebGLContext({
+            xrCompatible: true
+          });
+
+          renderer = new Renderer(gl);
+
+          scene.setRenderer(renderer);
         }
-
-        initGL();
 
         session.updateRenderState({ baseLayer: new XRWebGLLayer(session, gl) });
 
-        let refSpaceType = session.isImmersive ? 'local' : 'viewer';
-        session.requestReferenceSpace(refSpaceType).then((refSpace) => {
-          if (session.isImmersive) {
-            xrImmersiveRefSpace = refSpace;
-          } else {
-            inlineViewerHelper = new InlineViewerHelper(gl.canvas, refSpace);
-          }
+        // In this sample we want to cast a ray straight out from the viewer's
+        // position and render a reticle where it intersects with a real world
+        // surface. To do this we first get the viewer space, then create a
+        // hitTestSource that tracks it.
+        session.requestReferenceSpace('viewer').then((refSpace) => {
+          xrViewerSpace = refSpace;
+          session.requestHitTestSource({ space: xrViewerSpace }).then((hitTestSource) => {
+            xrHitTestSource = hitTestSource;
+          });
+        });
+
+        session.requestReferenceSpace('local').then((refSpace) => {
+          xrRefSpace = refSpace;
+
           session.requestAnimationFrame(onXRFrame);
         });
       }
 
       function onEndSession(session) {
+        xrHitTestSource.cancel();
+        xrHitTestSource = null;
         session.end();
       }
 
       function onSessionEnded(event) {
-        if (event.session.isImmersive) {
-          xrButton.setSession(null);
-          // Turn the background back on when we go back to the inlive view.
-          skybox.visible = true;
+        xrButton.setSession(null);
+      }
+
+      // Adds a new object to the scene at the
+      // specified transform.
+      function addARObjectAt(matrix) {
+        let newFlower = arObject.clone();
+        newFlower.visible = true;
+        newFlower.matrix = matrix;
+        scene.addNode(newFlower);
+
+        flowers.push(newFlower);
+
+        // For performance reasons if we add too many objects start
+        // removing the oldest ones to keep the scene complexity
+        // from growing too much.
+        if (flowers.length > MAX_FLOWERS) {
+          let oldFlower = flowers.shift();
+          scene.removeNode(oldFlower);
+        }
+      }
+
+      let rayOrigin = vec3.create();
+      let rayDirection = vec3.create();
+      function onSelect(event) {
+        if (reticle.visible) {
+          // The reticle should already be positioned at the latest hit point, 
+          // so we can just use it's matrix to save an unnecessary call to 
+          // event.frame.getHitTestResults.
+          addARObjectAt(reticle.matrix);
         }
       }
 
       // Called every time a XRSession requests that a new frame be drawn.
       function onXRFrame(t, frame) {
         let session = frame.session;
-        let refSpace = session.isImmersive ?
-                         xrImmersiveRefSpace :
-                         inlineViewerHelper.referenceSpace;
-        let pose = frame.getViewerPose(refSpace);
+        let pose = frame.getViewerPose(xrRefSpace);
+
+        reticle.visible = false;
+
+        // If we have a hit test source, get its results for the frame
+        // and use the pose to display a reticle in the scene.
+        if (xrHitTestSource && pose) {
+          let hitTestResults = frame.getHitTestResults(xrHitTestSource);
+          if (hitTestResults.length > 0) {
+            let pose = hitTestResults[0].getPose(xrRefSpace);
+            reticle.visible = true;
+            reticle.matrix = pose.transform.matrix;
+          }
+        }
 
         scene.startFrame();
 
