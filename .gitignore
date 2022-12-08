@@ -1,4 +1,5 @@
 /vtk-js/*
 /node_modules/*
 app.js
+/webxr-samples/*
 # package**
