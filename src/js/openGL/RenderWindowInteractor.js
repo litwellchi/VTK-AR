@@ -509,7 +509,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       var gripPose = inputSource.gripSpace == null ? null : xrFrame.getPose(inputSource.gripSpace, xrRefSpace);
       var gp = inputSource.gamepad;
       var hand = inputSource.handedness;
-
       if (gp) {
         if (!(gp.index in model.lastGamepadValues)) {
           model.lastGamepadValues[gp.index] = {

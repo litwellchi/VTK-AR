@@ -24,6 +24,9 @@ Start demo by using:
 npm run start
 ```
 
+## Custom interactor
+updateXRGamepads() method in `src\js\openGL\RenderWindowInteractor.js`
+
 # Refference
 vtk.js
 immersive-web/webxr-samples
