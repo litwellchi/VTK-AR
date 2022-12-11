@@ -464,6 +464,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               else{
                 interactor.updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
               }
+              // Update each frame
               model.xrSceneFrame = model.xrSession.requestAnimationFrame(publicAPI.xrRender);
               xrPose = frame.getViewerPose(model.xrReferenceSpace);
 

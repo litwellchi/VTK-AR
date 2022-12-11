@@ -1,4 +1,5 @@
 # Getting Start
+This project is still under developing... Expect finishing 2.0 Version at 2022/12/20.
 ## Device
 Ensure the device support the AR envoronment.
 You can check your device by [WenXR Examples](https://immersive-web.github.io/webxr-samples/)
