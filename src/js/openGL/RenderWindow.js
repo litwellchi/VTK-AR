@@ -365,9 +365,9 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     
     var ren = model.renderable.getRenderers()[0];
     // ren.resetCamera();
-    console.log('publicAPI',publicAPI)
-    console.log('model',model.hasOwnProperty('controlContainer'))
-    var act = ren.getVolumes()[0]
+    // console.log('publicAPI',publicAPI)
+    // console.log('model',model.hasOwnProperty('controlContainer'))
+    // var act = ren.getVolumes()[0]
     
     // console.log(act.getPosition())
     // console.log(act.getScale())
@@ -450,7 +450,20 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           switch (_context3.prev = _context3.next) {
             case 0:
               xrSession = frame.session;
-              model.renderable.getInteractor().updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
+
+              var interactor = model.renderable.getInteractor()
+              if(navigator.xr.isSessionSupported('immersive-ar')){
+                interactor.updateXRScreen(xrSession, frame, model.xrReferenceSpace);
+                var ren = model.renderable.getRenderers()[0];
+                var act = ren.getVolumes()[0];
+                act.rotateWXYZ(2,0.1,0,0);
+              // act.setPosition([0, 0, 0.001])
+              // act.setScale(act.getScale()[0]/5,act.getScale()[1]/5,act.getScale()[2]/5)
+                // ren.resetCamera();
+              }
+              else{
+                interactor.updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
+              }
               model.xrSceneFrame = model.xrSession.requestAnimationFrame(publicAPI.xrRender);
               xrPose = frame.getViewerPose(model.xrReferenceSpace);
 

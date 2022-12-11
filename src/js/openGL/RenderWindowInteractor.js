@@ -343,7 +343,6 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       var pointer = pointerCache.get(event.pointerId);
       pointer.position = getScreenEventPositionFor(event);
     }
-
     switch (event.pointerType) {
       case 'pen':
       case 'touch':
@@ -367,13 +366,13 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       case 0:
         publicAPI.leftButtonPressEvent(callData);
         break;
-
-      case 1:
-        publicAPI.middleButtonPressEvent(callData);
-        break;
-
-      case 2:
-        publicAPI.rightButtonPressEvent(callData);
+        
+        case 1:
+          publicAPI.middleButtonPressEvent(callData);
+          break;
+          
+        case 2:
+          publicAPI.rightButtonPressEvent(callData);
         break;
 
       default:
@@ -509,6 +508,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       var gripPose = inputSource.gripSpace == null ? null : xrFrame.getPose(inputSource.gripSpace, xrRefSpace);
       var gp = inputSource.gamepad;
       var hand = inputSource.handedness;
+      // console.log(inputSource.targetRayMode)
       if (gp) {
         if (!(gp.index in model.lastGamepadValues)) {
           model.lastGamepadValues[gp.index] = {
@@ -553,6 +553,14 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       }
     });
   };
+
+  publicAPI.updateXRScreen = function (xrSession, xrFrame, xrRefSpace) {
+    // watch for when buttons change state and fire events
+    xrSession.inputSources.forEach(function (inputSource) {
+
+    });
+  };
+
 
   publicAPI.handleMouseMove = function (event) {
     var callData = _objectSpread(_objectSpread({}, getModifierKeysFor(event)), {}, {

@@ -116,7 +116,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   let enterText = 'XR not available!';
   const exitText = 'Exit XR';
   xrButton.textContent = enterText;
-  console.log(fullScreenRenderer.getApiSpecificRenderWindow());
+  // console.log(fullScreenRenderer.getApiSpecificRenderWindow());
   if (
     navigator.xr !== undefined &&
     fullScreenRenderer.getApiSpecificRenderWindow().getXrSupported()
