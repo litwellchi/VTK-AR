@@ -264,6 +264,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
   }; // Request an XR session on the user device with WebXR,
   // typically in response to a user request such as a button press
 
+  publicAPI.interAction = function(){
+    //TODO Adding inter action source and reaction
+  }
+
   publicAPI.startXR = function (isAR) {
     if (navigator.xr === undefined) {
       throw new Error('WebXR is not available');
@@ -361,7 +365,8 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     
     var ren = model.renderable.getRenderers()[0];
     // ren.resetCamera();
-    console.log("in AR")
+    console.log('publicAPI',publicAPI)
+    console.log('model',model.hasOwnProperty('controlContainer'))
     var act = ren.getVolumes()[0]
     
     // console.log(act.getPosition())
@@ -372,7 +377,6 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     // console.log(act.getScale())
     // ren.addActor(act)
     
-    console.log(act)
     var camera = ren.getActiveCamera();
     var physicalScale = camera.getPhysicalScale();
     var physicalTranslation = camera.getPhysicalTranslation();
