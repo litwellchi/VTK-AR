@@ -2,8 +2,8 @@ import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import macro from '@kitware/vtk.js/macros.js';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
-import vtkRenderWindowInteractor from '@kitware/vtk.js/Rendering/Core/RenderWindowInteractor.js';
-import vtkInteractorStyleTrackballCamera from '@kitware/vtk.js//Interaction/Style/InteractorStyleTrackballCamera.js';
+import vtkRenderWindowInteractor from '../openGL/RenderWindowInteractor.js';
+import vtkInteractorStyleTrackballCamera from '@kitware/vtk.js/Interaction/Style/InteractorStyleTrackballCamera.js';
 import vtkURLExtract from '@kitware/vtk.js/Common/Core/URLExtract.js';
 import '@kitware/vtk.js/Common/Core/Points.js';
 import '@kitware/vtk.js/Common/Core/DataArray.js';
@@ -82,6 +82,8 @@ function vtkFullScreenRenderWindow(publicAPI, model) {
   model.interactor.setView(model.apiSpecificRenderWindow);
   model.interactor.initialize();
   model.interactor.bindEvents(model.container); // Expose background
+  console.log('model.interactor',model.interactor)
+  // adding interactor testing pannel
 
   publicAPI.setBackground = model.renderer.setBackground;
 
