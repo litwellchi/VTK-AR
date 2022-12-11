@@ -9,7 +9,8 @@ import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
 import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
 
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
-import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+// import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkFullScreenRenderWindow from './js/renderwindow/FullScreenRenderWindow.js'
 import HttpDataAccessHelper from '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
 import vtkImageReslice from '@kitware/vtk.js/Imaging/Core/ImageReslice';
 import vtkMath from '@kitware/vtk.js/Common/Core/Math';
@@ -20,9 +21,10 @@ import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
 
 import './WebXRVolume.module.css';
+import controlPanel from './controller.html';
 import { ac } from '@kitware/vtk.js/Common/Core/Math/index';
 
-// ----------------------------------------------------------------------------
+// ---------------------------------------------------------------------------x-
 // Standard rendering code setup
 // ----------------------------------------------------------------------------
 
@@ -92,24 +94,29 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   actor.getProperty().setInterpolationTypeToLinear();
   
   // change the position of the object
-  console.log(actor.getCenter())
-  console.log(actor.getPosition())
   // Set up rendering
   // renderer.getActiveCamera().zoom(0.01);
   // renderer.resetCamera();
   actor.setPosition([0, 0, 0])
-  actor.setScale(0.01,0.01,0.01)
+  actor.setScale(0.1,0.1,0.1)
   renderer.addActor
-  // renderWindow.render();
+  renderWindow.render();
 
   // Add button to launch AR (default) or VR scene
   const VR = 1;
   const AR = 2;
   let xrSessionType = 0;
-  const xrButton = document.createElement('button');
+  // const xrButton = document.createElement('button');
+
+  fullScreenRenderer.addController(controlPanel);
+  const representationSelector = document.querySelector('.representations');
+  const rotateChange = document.querySelector('.rotate');
+  const xrButton = document.querySelector('.arbutton');
+
   let enterText = 'XR not available!';
   const exitText = 'Exit XR';
   xrButton.textContent = enterText;
+  console.log(fullScreenRenderer.getApiSpecificRenderWindow());
   if (
     navigator.xr !== undefined &&
     fullScreenRenderer.getApiSpecificRenderWindow().getXrSupported()
@@ -130,6 +137,15 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
       }
     });
   }
+
+  rotateChange.addEventListener('input', (e) => {
+    const rotate = Number(e.target.value);
+    // coneSource.setResolution(resolution);
+    actor.rotateWXYZ(rotate,1,0,0)
+    renderWindow.render();
+  });
+
+  // xrButton.style.position="absolute";
   xrButton.addEventListener('click', () => {
     if (xrButton.textContent === enterText) {
       if (xrSessionType === AR) {
@@ -147,8 +163,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
       xrButton.textContent = enterText;
     }
   });
-  xrButton.style.position="absolute";
-  document.querySelector('.content').appendChild(xrButton);
+  // document.querySelector('.content').appendChild(xrButton);
 });
 
 // -----------------------------------------------------------

@@ -9,4 +9,8 @@ module.exports = {
       { test: /\.css$/, use: 'css-loader' },
       { test: /\.html$/, use: 'html-loader' },],
     },
+    devServer:{
+      static:'./dist',
+      hot:true,
+    },
 };

@@ -20,6 +20,7 @@ import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
 
 import './WebXRVolume.module.css';
+import { ac } from '@kitware/vtk.js/Common/Core/Math/index';
 
 // ----------------------------------------------------------------------------
 // Standard rendering code setup
@@ -44,7 +45,6 @@ reslicer.setInputConnection(vtiReader.getOutputPort());
 mapper.setInputConnection(reslicer.getOutputPort());
 actor.setMapper(mapper);
 renderer.addVolume(actor);
-
 // create color and opacity transfer functions
 const ctfun = vtkColorTransferFunction.newInstance();
 const ofun = vtkPiecewiseFunction.newInstance();
@@ -60,15 +60,14 @@ const {
 HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // Read data
   vtiReader.parseAsArrayBuffer(fileContents);
-
   // Rotate 90 degrees forward so that default head volume faces camera
   const rotateX = mat4.create();
-  mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(90), [-1, 0, 0]);
+  mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(15), [-1, 0, 0]);
   reslicer.setResliceAxes(rotateX);
-
+  
   const data = reslicer.getOutputData(0);
   const dataArray =
-    data.getPointData().getScalars() || data.getPointData().getArrays()[0];
+  data.getPointData().getScalars() || data.getPointData().getArrays()[0];
   const dataRange = dataArray.getRange();
 
   // Restyle visual appearance
@@ -80,20 +79,26 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
         .map((v) => v * v)
         .reduce((a, b) => a + b, 0)
     );
+  
   mapper.setSampleDistance(sampleDistance);
-
   ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 0.3);
   ctfun.addRGBPoint(dataRange[1], 1.0, 1.0, 1.0);
-  ofun.addPoint(dataRange[0], 0.0);
-  ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
+  // ofun.addPoint(dataRange[0], 0.0);
+  // ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
   ofun.addPoint(dataRange[1], 0.5);
+  // console.log(mapper.getBounds())
   actor.getProperty().setRGBTransferFunction(0, ctfun);
   actor.getProperty().setScalarOpacity(0, ofun);
   actor.getProperty().setInterpolationTypeToLinear();
-
+  
+  // change the position of the object
   // Set up rendering
-  renderer.resetCamera();
-  renderWindow.render();
+  // renderer.getActiveCamera().zoom(0.01);
+  // renderer.resetCamera();
+  actor.setPosition([0, 0, 0])
+  actor.setScale(0.1,0.1,0.1)
+  renderer.addActor
+  // renderWindow.render();
 
   // Add button to launch AR (default) or VR scene
   const VR = 1;
@@ -103,6 +108,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   let enterText = 'XR not available!';
   const exitText = 'Exit XR';
   xrButton.textContent = enterText;
+  console.log(fullScreenRenderer.getApiSpecificRenderWindow());
   if (
     navigator.xr !== undefined &&
     fullScreenRenderer.getApiSpecificRenderWindow().getXrSupported()
@@ -123,6 +129,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
       }
     });
   }
+  xrButton.style.position="absolute";
   xrButton.addEventListener('click', () => {
     if (xrButton.textContent === enterText) {
       if (xrSessionType === AR) {
@@ -140,7 +147,6 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
       xrButton.textContent = enterText;
     }
   });
-  xrButton.style.position="absolute";
   document.querySelector('.content').appendChild(xrButton);
 });
 

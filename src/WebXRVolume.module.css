@@ -9,6 +9,6 @@ button {
   left: 10px;
   top: 10px;
   width: 200px;
-  z-index: 2;
+  z-index: 20;
   cursor: pointer;
 }
