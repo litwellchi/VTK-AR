@@ -10,8 +10,8 @@ import '@kitware/vtk.js/Common/Core/DataArray.js';
 import '@kitware/vtk.js/Common/DataModel/PolyData.js';
 import '@kitware/vtk.js/Rendering/Core/Actor.js';
 import '@kitware/vtk.js/Rendering/Core/Mapper.js';
-import '@kitware/vtk.js/Rendering/OpenGL/RenderWindow.js';
-import '@kitware/vtk.js/Rendering/WebGPU/RenderWindow.js';
+import '../openGL/RenderWindow.js';
+// import '@kitware/vtk.js/Rendering/WebGPU/RenderWindow.js';
 
 var userParams = vtkURLExtract.extractURLParameters();
 var STYLE_CONTAINER = {

@@ -2,17 +2,19 @@ import _slicedToArray from '@babel/runtime/helpers/slicedToArray';
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import _asyncToGenerator from '@babel/runtime/helpers/asyncToGenerator';
 import _regeneratorRuntime from '@babel/runtime/regenerator';
-import { VtkDataTypes } from '../../Common/Core/DataArray/Constants.js';
-import macro from '../../macros.js';
-import { registerViewConstructor } from '../Core/RenderWindow.js';
-import vtkForwardPass from './ForwardPass.js';
-import vtkHardwareSelector from './HardwareSelector.js';
-import vtkShaderCache from './ShaderCache.js';
-import vtkTextureUnitManager from './TextureUnitManager.js';
-import vtkViewNodeFactory from './ViewNodeFactory.js';
-import vtkRenderPass from '../SceneGraph/RenderPass.js';
-import vtkRenderWindowViewNode from '../SceneGraph/RenderWindowViewNode.js';
-import { createContextProxyHandler } from './RenderWindow/ContextProxy.js';
+import { VtkDataTypes } from '@kitware/vtk.js/Common/Core/DataArray/Constants.js';
+import macro from '@kitware/vtk.js/macros.js';
+import { registerViewConstructor } from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
+import vtkForwardPass from '@kitware/vtk.js/Rendering/OpenGL/ForwardPass.js';
+import vtkHardwareSelector from '@kitware/vtk.js/Rendering/OpenGL/HardwareSelector.js';
+import vtkShaderCache from '@kitware/vtk.js/Rendering/OpenGL/ShaderCache.js';
+import vtkTextureUnitManager from '@kitware/vtk.js/Rendering/OpenGL/TextureUnitManager.js';
+import vtkViewNodeFactory from '@kitware/vtk.js/Rendering/OpenGL/ViewNodeFactory.js';
+import vtkRenderPass from '@kitware/vtk.js/Rendering/SceneGraph/RenderPass.js';
+import vtkRenderWindowViewNode from '@kitware/vtk.js/Rendering/SceneGraph/RenderWindowViewNode.js';
+import { createContextProxyHandler } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/ContextProxy.js';
+
+import controlPanel from '../../controller.html';
 
 var vtkDebugMacro = macro.vtkDebugMacro,
     vtkErrorMacro = macro.vtkErrorMacro;
@@ -358,9 +360,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }
     
     var ren = model.renderable.getRenderers()[0];
-    ren.resetCamera();
+    // ren.resetCamera();
     console.log("in AR")
     var act = ren.getVolumes()[0]
+    
     // console.log(act.getPosition())
     // console.log(act.getScale())
     // act.setPosition([0, 0, 0.001])
