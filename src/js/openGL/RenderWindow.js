@@ -15,6 +15,9 @@ import vtkRenderWindowViewNode from '@kitware/vtk.js/Rendering/SceneGraph/Render
 import { createContextProxyHandler } from '@kitware/vtk.js/Rendering/OpenGL/RenderWindow/ContextProxy.js';
 
 import controlPanel from '../../controller.html';
+import * as mat4 from '../iosWebXR/examples/libs/gl-matrix/mat4.js';
+import * as vec3 from '../iosWebXR/examples/libs/gl-matrix/vec3.js';
+
 
 var vtkDebugMacro = macro.vtkDebugMacro,
     vtkErrorMacro = macro.vtkErrorMacro;
@@ -38,6 +41,11 @@ var DEFAULT_RESET_FACTORS = {
 
   }
 };
+
+
+const workingMatrix = mat4.create();
+const workingVec3 = vec3.create();
+
 let imageDetectionCreationRequested = false;
 let imageActivateDetection = false;
 let imageActivated = false;
@@ -360,6 +368,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               model.xrSession.requestReferenceSpace('local').then(function (refSpace) {
                 model.xrReferenceSpace = refSpace;
               });
+              model.xrSession.requestReferenceSpace('viewer').then(function (refSpace) {
+                model.xrViewerReferenceSpace = refSpace;
+              });
+              
               publicAPI.resetXRScene();
               model.renderable.getInteractor().switchToXRAnimation();
               model.xrSceneFrame = model.xrSession.requestAnimationFrame(publicAPI.xrRender);
@@ -488,8 +500,19 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
             case 0:
               xrSession = frame.session;
 
-              // TODO: custom the the image target interface
+              // TODO: Matching the enginee with the vtk renderer
+              // get the location of the device, and use it to create an 
+				      // anchor with the identity orientation
               // console.log(global.hubsImageData)
+              mat4.copy(workingMatrix, frame.getPose(model.xrReferenceSpace, model.xrViewerReferenceSpace).transform.matrix);
+              mat4.getTranslation(workingVec3, workingMatrix);
+              mat4.fromTranslation(workingMatrix, workingVec3);
+
+              // window.alert(workingMatrix)
+  
+              // const anchor = frame.addAnchor(workingMatrix, localReferenceSpace);
+              // engine.addAnchoredNode(anchor, engine.root);
+
               if (!imageDetectionCreationRequested) {
                 imageDetectionCreationRequested=true
                 xrSession.nonStandard_createDetectionImage('hubs', global.hubsImageData.data, global.hubsImageData.width, global.hubsImageData.height, 0.2).then(() => {
@@ -498,22 +521,22 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
                   window.alert(`error creating ducky detection image: ${error}`)
                 });
               }
-              if (!imageActivated && imageActivateDetection) {
-                imageActivated = true;
-                imageActivateDetection = false;
+              // if (!imageActivated && imageActivateDetection) {
+              //   imageActivated = true;
+              //   imageActivateDetection = false;
       
-                session.nonStandard_activateDetectionImage('hubs').then(anchor => {
-                  imageActivated = false;
-                  imageAnchor = anchor;
-                  imageAnchor.addEventListener('remove', event => {
-                    imageActivated = false;
-                  });
-                  engine.addAnchoredNode(imageAnchor, ducky);
-                }).catch(error => {
-                  imageActivated = false;
-                  console.error(`error activating ducky detection image: ${error}`);
-                });
-              }
+              //   session.nonStandard_activateDetectionImage('hubs').then(anchor => {
+              //     imageActivated = false;
+              //     imageAnchor = anchor;
+              //     imageAnchor.addEventListener('remove', event => {
+              //       imageActivated = false;
+              //     });
+              //     // engine.addAnchoredNode(imageAnchor, ducky);
+              //   }).catch(error => {
+              //     imageActivated = false;
+              //     console.error(`error activating ducky detection image: ${error}`);
+              //   });
+              // }
 
               var interactor = model.renderable.getInteractor()
               if(navigator.xr.isSessionSupported('immersive-ar')){
