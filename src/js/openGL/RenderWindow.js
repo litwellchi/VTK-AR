@@ -268,7 +268,35 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     //TODO Adding inter action source and reaction
   }
 
-  publicAPI.startXR = function (isAR) {
+  publicAPI.getXRSessionInit = function(mode, options) {
+  	if ( options && options.referenceSpaceType ) {
+      // model.setReferenceSpaceType( options.referenceSpaceType )
+  		// renderer.xr.setReferenceSpaceType( options.referenceSpaceType );
+  	}
+  	var space = (options || {}).referenceSpaceType || 'local-floor';
+  	var sessionInit = (options && options.sessionInit) || {};
+  
+  	// Nothing to do for default features.
+  	if ( space == 'viewer' )
+  		return sessionInit;
+  	if ( space == 'local' && mode.startsWith('immersive' ) )
+  		return sessionInit;
+  
+  	// If the user already specified the space as an optional or required feature, don't do anything.
+  	if ( sessionInit.optionalFeatures && sessionInit.optionalFeatures.includes(space) )
+  		return sessionInit;
+  	if ( sessionInit.requiredFeatures && sessionInit.requiredFeatures.includes(space) )
+  		return sessionInit;
+  
+  	var newInit = Object.assign( {}, sessionInit );
+  	newInit.requiredFeatures = [ space ];
+  	if ( sessionInit.requiredFeatures ) {
+  		newInit.requiredFeatures = newInit.requiredFeatures.concat( sessionInit.requiredFeatures );
+  	}
+  	return newInit;
+   }
+
+  publicAPI.startXR = function (isAR, options) {
     if (navigator.xr === undefined) {
       throw new Error('WebXR is not available');
     }
@@ -283,9 +311,14 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
         throw new Error('VR display is not available');
       }
     }
-
+    var sessionInit = publicAPI.getXRSessionInit( sessionType, {
+			mode: sessionType,
+			referenceSpaceType: 'local', // 'local-floor'
+			sessionInit: options
+		});
+    console.log(sessionInit)
     if (model.xrSession === null) {
-      navigator.xr.requestSession(sessionType).then(publicAPI.enterXR, function () {
+      navigator.xr.requestSession(sessionType, ['worldSensing']).then(publicAPI.enterXR, function () {
         throw new Error('Failed to create XR session!');
       });
     } else {
@@ -453,16 +486,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
               var interactor = model.renderable.getInteractor()
               if(navigator.xr.isSessionSupported('immersive-ar')){
-                interactor.updateXRScreen(xrSession, frame, model.xrReferenceSpace);
-                var ren = model.renderable.getRenderers()[0];
-                var act = ren.getVolumes()[0];
-                act.rotateWXYZ(2,0.1,0,0);
-              // act.setPosition([0, 0, 0.001])
-              // act.setScale(act.getScale()[0]/5,act.getScale()[1]/5,act.getScale()[2]/5)
-                // ren.resetCamera();
+                // console.log(frame)
+                // const results = frame.getImageTrackingResults();
+                interactor.updateXRScreen(xrSession, frame, model.xrReferenceSpace, model.renderable.getRenderers()[0]);
               }
               else{
-                interactor.updateXRGamepads(xrSession, frame, model.xrReferenceSpace);
+                interactor.updateXRScreen(xrSession, frame, model.xrReferenceSpace);
               }
               // Update each frame
               model.xrSceneFrame = model.xrSession.requestAnimationFrame(publicAPI.xrRender);

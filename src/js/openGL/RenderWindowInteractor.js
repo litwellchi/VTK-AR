@@ -554,9 +554,11 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     });
   };
 
-  publicAPI.updateXRScreen = function (xrSession, xrFrame, xrRefSpace) {
+  publicAPI.updateXRScreen = function (xrSession, xrFrame, xrRefSpace, vtkRenderer) {
     // watch for when buttons change state and fire events
     xrSession.inputSources.forEach(function (inputSource) {
+      var act = vtkRenderer.getVolumes()[0];
+      act.rotateWXYZ(2,0,0.1,0);
 
     });
   };

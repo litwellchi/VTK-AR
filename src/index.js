@@ -50,13 +50,20 @@ renderer.addVolume(actor);
 // create color and opacity transfer functions
 const ctfun = vtkColorTransferFunction.newInstance();
 const ofun = vtkPiecewiseFunction.newInstance();
-
+// const img = document.getElementById('target_img');
+// Ensure the image is loaded and ready for use
+var img = new Image();
+img.src = './heart.jpg';
+var imgBitmap = null
+createImageBitmap(img).then(x=>{imgBitmap = x});
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
 
 const {
-  fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
+  // fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
+  fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
+
 } = vtkURLExtract.extractURLParameters();
 
 HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
@@ -85,8 +92,8 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   mapper.setSampleDistance(sampleDistance);
   ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 0.3);
   ctfun.addRGBPoint(dataRange[1], 1.0, 1.0, 1.0);
-  // ofun.addPoint(dataRange[0], 0.0);
-  // ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
+  ofun.addPoint(dataRange[0], 0.0);
+  ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
   ofun.addPoint(dataRange[1], 0.5);
   // console.log(mapper.getBounds())
   actor.getProperty().setRGBTransferFunction(0, ctfun);
@@ -96,11 +103,24 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // change the position of the object
   // Set up rendering
   // renderer.getActiveCamera().zoom(0.01);
-  // renderer.resetCamera();
-  actor.setPosition([0, 0, 0])
-  actor.setScale(0.1,0.1,0.1)
+  renderer.resetCamera();
+  // actor.setPosition([0, 0, 0])
+  // actor.setScale(0.1,0.1,0.1)
   renderer.addActor
   renderWindow.render();
+
+  // Adding WebXR Options
+  let options = {
+    // requiredFeatures: ['dom-overlay','image-tracking'],
+    requiredFeatures: ['dom-overlay'],
+    trackedImages: [
+      {
+        image: imgBitmap,
+        widthInMeters: 0.05
+      }
+    ],
+    // domOverlay: { root: document.body}
+};
 
   // Add button to launch AR (default) or VR scene
   const VR = 1;
@@ -153,7 +173,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
       }
       fullScreenRenderer
         .getApiSpecificRenderWindow()
-        .startXR(xrSessionType === AR);
+        .startXR(xrSessionType === AR, options);
       xrButton.textContent = exitText;
     } else {
       fullScreenRenderer.setBackground([...background, 255]);
