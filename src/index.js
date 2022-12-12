@@ -20,6 +20,7 @@ import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper';
 import vtkXMLImageDataReader from '@kitware/vtk.js/IO/XML/XMLImageDataReader';
 
+import './js/iosWebXR/examples/libs/three/three.min.js'
 import './WebXRVolume.module.css';
 import controlPanel from './controller.html';
 import { ac } from '@kitware/vtk.js/Common/Core/Math/index';
@@ -56,6 +57,22 @@ var img = new Image();
 img.src = './heart.jpg';
 var imgBitmap = null
 createImageBitmap(img).then(x=>{imgBitmap = x});
+console.log(imgBitmap)
+
+const getImageData = imagePath => {
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  const img = new Image();
+  img.src = imagePath;
+  canvas.width = img.width;
+  canvas.height = img.height;
+  context.drawImage(img, 0, 0);
+  return context.getImageData(0, 0, img.width, img.height);
+};
+let hubsImageData = getImageData('./heart.jpg');
+// console.log(hubsImageData)
+console.log(hubsImageData)
+
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
@@ -115,7 +132,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
     requiredFeatures: ['dom-overlay'],
     trackedImages: [
       {
-        image: imgBitmap,
+        image: hubsImageData,
         widthInMeters: 0.05
       }
     ],
@@ -198,3 +215,4 @@ global.ctfun = ctfun;
 global.ofun = ofun;
 global.renderer = renderer;
 global.renderWindow = renderWindow;
+global.hubsImageData = hubsImageData;

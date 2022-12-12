@@ -38,6 +38,10 @@ var DEFAULT_RESET_FACTORS = {
 
   }
 };
+let imageDetectionCreationRequested = false;
+let imageActivateDetection = false;
+let imageActivated = false;
+let imageAnchor = null;
 
 function checkRenderTargetSupport(gl, format, type) {
   // create temporary frame buffer and texture
@@ -318,7 +322,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 		});
     console.log(sessionInit)
     if (model.xrSession === null) {
-      navigator.xr.requestSession(sessionType, ['worldSensing']).then(publicAPI.enterXR, function () {
+      navigator.xr.requestSession(sessionType, {requiredFeatures: ['worldSensing']}).then(publicAPI.enterXR, function () {
         throw new Error('Failed to create XR session!');
       });
     } else {
@@ -483,6 +487,33 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
           switch (_context3.prev = _context3.next) {
             case 0:
               xrSession = frame.session;
+
+              // TODO: custom the the image target interface
+              // console.log(global.hubsImageData)
+              if (!imageDetectionCreationRequested) {
+                imageDetectionCreationRequested=true
+                xrSession.nonStandard_createDetectionImage('hubs', global.hubsImageData.data, global.hubsImageData.width, global.hubsImageData.height, 0.2).then(() => {
+                  imageActivateDetection = true;
+                }).catch(error => {
+                  window.alert(`error creating ducky detection image: ${error}`)
+                });
+              }
+              if (!imageActivated && imageActivateDetection) {
+                imageActivated = true;
+                imageActivateDetection = false;
+      
+                session.nonStandard_activateDetectionImage('hubs').then(anchor => {
+                  imageActivated = false;
+                  imageAnchor = anchor;
+                  imageAnchor.addEventListener('remove', event => {
+                    imageActivated = false;
+                  });
+                  engine.addAnchoredNode(imageAnchor, ducky);
+                }).catch(error => {
+                  imageActivated = false;
+                  console.error(`error activating ducky detection image: ${error}`);
+                });
+              }
 
               var interactor = model.renderable.getInteractor()
               if(navigator.xr.isSessionSupported('immersive-ar')){
