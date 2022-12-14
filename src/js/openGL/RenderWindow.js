@@ -540,7 +540,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               console.log('workingMatrix',workingMatrix)//'Float32Array'
               
               const anchor = frame.addAnchor(workingMatrix, model.xrReferenceSpace);
-              publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
+              // publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
 
               if (!imageDetectionCreationRequested) {
                 imageDetectionCreationRequested=true
