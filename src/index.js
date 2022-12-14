@@ -78,14 +78,15 @@ console.log(hubsImageData)
 // ----------------------------------------------------------------------------
 
 const {
-  // fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
-  fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
+  fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
+  // fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
 
 } = vtkURLExtract.extractURLParameters();
 
 HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // Read data
   vtiReader.parseAsArrayBuffer(fileContents);
+  console.log('vtiReader',vtiReader)
   // Rotate 90 degrees forward so that default head volume faces camera
   const rotateX = mat4.create();
   mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(15), [-1, 0, 0]);
@@ -123,7 +124,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   renderer.resetCamera();
   // actor.setPosition([0, 0, 0])
   // actor.setScale(0.1,0.1,0.1)
-  renderer.addActor
+  renderer.addActor(actor)
   renderWindow.render();
 
   // Adding WebXR Options

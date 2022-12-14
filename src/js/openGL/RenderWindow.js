@@ -17,7 +17,8 @@ import { createContextProxyHandler } from '@kitware/vtk.js/Rendering/OpenGL/Rend
 import controlPanel from '../../controller.html';
 import * as mat4 from '../iosWebXR/examples/libs/gl-matrix/mat4.js';
 import * as vec3 from '../iosWebXR/examples/libs/gl-matrix/vec3.js';
-
+import { E } from '@kitware/vtk.js/Common/Core/Math/index';
+import XREngine from '../iosWebXR/examples/XREngine.js';
 
 var vtkDebugMacro = macro.vtkDebugMacro,
     vtkErrorMacro = macro.vtkErrorMacro;
@@ -46,6 +47,7 @@ var DEFAULT_RESET_FACTORS = {
 const workingMatrix = mat4.create();
 const workingVec3 = vec3.create();
 
+let engine = null;
 let imageDetectionCreationRequested = false;
 let imageActivateDetection = false;
 let imageActivated = false;
@@ -330,8 +332,13 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 		});
     console.log(sessionInit)
     if (model.xrSession === null) {
+      if(sessionType == 'immersive-ar')
       navigator.xr.requestSession(sessionType, {requiredFeatures: ['worldSensing']}).then(publicAPI.enterXR, function () {
-        throw new Error('Failed to create XR session!');
+        throw new Error('Failed to create AR session!');
+      });
+      else
+      navigator.xr.requestSession(sessionType).then(publicAPI.enterXR, function () {
+        throw new Error('Failed to create VR session!');
       });
     } else {
       throw new Error('XR Session already exists!');
@@ -457,6 +464,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               break;
             }
 
+            
             model.xrSession.cancelAnimationFrame(model.xrSceneFrame);
             model.renderable.getInteractor().returnFromXRAnimation();
             gl = publicAPI.get3DContext();
@@ -491,6 +499,27 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
     }, _callee2);
   }));
 
+  publicAPI.addAnchoredNode= function(anchor, node){
+		if (!anchor || !anchor.uid) {
+			console.error("not a valid anchor", anchor)
+			return;
+		}
+		this._anchoredNodes.set(anchor.uid, {
+			anchor: anchor,
+			node: node
+		})
+		node.anchor = anchor
+		node.matrixAutoUpdate = false
+		node.matrix.fromArray(anchor.modelMatrix)
+		// node.updateMatrixWorld(true)	
+		// this._scene.add(node)
+
+		// anchor.addEventListener("update", this._handleAnchorUpdate.bind(this))
+		// anchor.addEventListener("remove", this._handleAnchorDelete.bind(this))
+	
+		return node
+	}
+
   publicAPI.xrRender = /*#__PURE__*/function () {
     var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(t, frame) {
       var xrSession, xrPose, gl, glLayer, ren;
@@ -508,10 +537,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               mat4.getTranslation(workingVec3, workingMatrix);
               mat4.fromTranslation(workingMatrix, workingVec3);
 
-              // window.alert(workingMatrix)
-  
-              // const anchor = frame.addAnchor(workingMatrix, localReferenceSpace);
-              // engine.addAnchoredNode(anchor, engine.root);
+              console.log('workingMatrix',workingMatrix)//'Float32Array'
+              
+              const anchor = frame.addAnchor(workingMatrix, model.xrReferenceSpace);
+              publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
 
               if (!imageDetectionCreationRequested) {
                 imageDetectionCreationRequested=true
