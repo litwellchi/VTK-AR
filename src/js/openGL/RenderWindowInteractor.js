@@ -1,7 +1,7 @@
 import _toConsumableArray from '@babel/runtime/helpers/toConsumableArray';
 import _defineProperty from '@babel/runtime/helpers/defineProperty';
 import macro from '@kitware/vtk.js/macros.js';
-import { B as degreesFromRadians } from '@kitware/vtk.js/Common/Core/Math/index.js';
+import { ac, B as degreesFromRadians } from '@kitware/vtk.js/Common/Core/Math/index.js';
 import Constants from '@kitware/vtk.js/Rendering/Core/RenderWindowInteractor/Constants.js';
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
@@ -558,7 +558,9 @@ function vtkRenderWindowInteractor(publicAPI, model) {
     // watch for when buttons change state and fire events
     xrSession.inputSources.forEach(function (inputSource) {
       var act = vtkRenderer.getVolumes()[0];
-      act.rotateWXYZ(2,0,0.1,0);
+      // act.rotateWXYZ(2,0,0.1,0);
+      // console.log(act.getPosition())
+      act.setPosition(act.getPosition()[0]+1,0,0);
 
     });
   };

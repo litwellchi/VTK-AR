@@ -511,11 +511,11 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 		node.anchor = anchor
 		node.matrixAutoUpdate = false
 		node.matrix.fromArray(anchor.modelMatrix)
-		// node.updateMatrixWorld(true)	
-		// this._scene.add(node)
+		node.updateMatrixWorld(true)	
+		this._scene.add(node)
 
-		// anchor.addEventListener("update", this._handleAnchorUpdate.bind(this))
-		// anchor.addEventListener("remove", this._handleAnchorDelete.bind(this))
+		anchor.addEventListener("update", this._handleAnchorUpdate.bind(this))
+		anchor.addEventListener("remove", this._handleAnchorDelete.bind(this))
 	
 		return node
 	}
@@ -533,39 +533,46 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               // get the location of the device, and use it to create an 
 				      // anchor with the identity orientation
               // console.log(global.hubsImageData)
+              // model.xrViewerReferenceSpace viewer space
+              // model.xrReferenceSpace or model.xrLocalReferenceSpace Real world space
               mat4.copy(workingMatrix, frame.getPose(model.xrReferenceSpace, model.xrViewerReferenceSpace).transform.matrix);
+              // workingVec3 is 
               mat4.getTranslation(workingVec3, workingMatrix);
+              // workingMatrix
               mat4.fromTranslation(workingMatrix, workingVec3);
 
-              console.log('workingMatrix',workingMatrix)//'Float32Array'
+              // console.log('workingMatrix',workingMatrix)//'Float32Array'
               
               const anchor = frame.addAnchor(workingMatrix, model.xrReferenceSpace);
-              // publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
+              publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
 
               if (!imageDetectionCreationRequested) {
                 imageDetectionCreationRequested=true
+                // console.log(global.hubsImageData)
                 xrSession.nonStandard_createDetectionImage('hubs', global.hubsImageData.data, global.hubsImageData.width, global.hubsImageData.height, 0.2).then(() => {
                   imageActivateDetection = true;
                 }).catch(error => {
                   window.alert(`error creating ducky detection image: ${error}`)
                 });
               }
-              // if (!imageActivated && imageActivateDetection) {
-              //   imageActivated = true;
-              //   imageActivateDetection = false;
+              if (!imageActivated && imageActivateDetection) {
+                imageActivated = true;
+                imageActivateDetection = false;
       
-              //   session.nonStandard_activateDetectionImage('hubs').then(anchor => {
-              //     imageActivated = false;
-              //     imageAnchor = anchor;
-              //     imageAnchor.addEventListener('remove', event => {
-              //       imageActivated = false;
-              //     });
-              //     // engine.addAnchoredNode(imageAnchor, ducky);
-              //   }).catch(error => {
-              //     imageActivated = false;
-              //     console.error(`error activating ducky detection image: ${error}`);
-              //   });
-              // }
+                // window.alert('start detect')
+                session.nonStandard_activateDetectionImage('hubs').then(anchor => {
+                  imageActivated = false;
+                  // imageAnchor = anchor;
+                  window.alert("in detect")
+                  // imageAnchor.addEventListener('remove', event => {
+                  imageActivated = false;
+                  // });
+                  // engine.addAnchoredNode(imageAnchor, ducky);
+                }).catch(error => {
+                  imageActivated = false;
+                  console.error(`error activating ducky detection image: ${error}`);
+                });
+              }
 
               var interactor = model.renderable.getInteractor()
               if(navigator.xr.isSessionSupported('immersive-ar')){

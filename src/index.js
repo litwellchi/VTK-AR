@@ -54,7 +54,7 @@ const ofun = vtkPiecewiseFunction.newInstance();
 // const img = document.getElementById('target_img');
 // Ensure the image is loaded and ready for use
 var img = new Image();
-img.src = './heart.jpg';
+img.src = 'hubs.png';
 var imgBitmap = null
 createImageBitmap(img).then(x=>{imgBitmap = x});
 console.log(imgBitmap)
@@ -69,7 +69,7 @@ const getImageData = imagePath => {
   context.drawImage(img, 0, 0);
   return context.getImageData(0, 0, img.width, img.height);
 };
-let hubsImageData = getImageData('./heart.jpg');
+let hubsImageData = getImageData('hubs.png');
 // console.log(hubsImageData)
 console.log(hubsImageData)
 
@@ -78,15 +78,15 @@ console.log(hubsImageData)
 // ----------------------------------------------------------------------------
 
 const {
-  fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
-  // fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
+  // fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
+  fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
 
 } = vtkURLExtract.extractURLParameters();
 
 HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // Read data
   vtiReader.parseAsArrayBuffer(fileContents);
-  console.log('vtiReader',vtiReader)
+  console.log('vtiReader',vtiReader.toJSON())
   // Rotate 90 degrees forward so that default head volume faces camera
   const rotateX = mat4.create();
   mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(15), [-1, 0, 0]);
@@ -96,7 +96,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   const dataArray =
   data.getPointData().getScalars() || data.getPointData().getArrays()[0];
   const dataRange = dataArray.getRange();
-
+  
   // Restyle visual appearance
   const sampleDistance =
     0.7 *
@@ -110,7 +110,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   mapper.setSampleDistance(sampleDistance);
   ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 0.3);
   ctfun.addRGBPoint(dataRange[1], 1.0, 1.0, 1.0);
-  ofun.addPoint(dataRange[0], 0.0);
+  // ofun.addPoint(dataRange[0], 0.0);
   ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
   ofun.addPoint(dataRange[1], 0.5);
   // console.log(mapper.getBounds())
@@ -122,7 +122,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // Set up rendering
   // renderer.getActiveCamera().zoom(0.01);
   renderer.resetCamera();
-  // actor.setPosition([0, 0, 0])
+  actor.setPosition([0, 0, 0])
   // actor.setScale(0.1,0.1,0.1)
   renderer.addActor(actor)
   renderWindow.render();
