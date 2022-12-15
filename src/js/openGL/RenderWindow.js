@@ -560,10 +560,10 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
                 imageActivateDetection = false;
       
                 // window.alert('start detect')
-                session.nonStandard_activateDetectionImage('hubs').then(anchor => {
+                xrSession.nonStandard_activateDetectionImage('hubs').then(anchor => {
                   imageActivated = false;
                   // imageAnchor = anchor;
-                  window.alert("in detect")
+                  window.alert("in detect");
                   // imageAnchor.addEventListener('remove', event => {
                   imageActivated = false;
                   // });
