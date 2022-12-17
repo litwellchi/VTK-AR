@@ -228,7 +228,7 @@
 					session.nonStandard_activateDetectionImage(hubsImageName).then(anchor => {
 						imageActivated = false;
 						imageAnchor = anchor;
-						// window.alert(anchor.modelMatrix.length)
+						window.alert('in detect')
 						imageAnchor.addEventListener('remove', event => {
 							imageActivated = false;
 						});

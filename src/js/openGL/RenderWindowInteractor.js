@@ -560,8 +560,7 @@ function vtkRenderWindowInteractor(publicAPI, model) {
       var act = vtkRenderer.getVolumes()[0];
       // act.rotateWXYZ(2,0,0.1,0);
       // console.log(act.getPosition())
-      act.setPosition(act.getPosition()[0]+1,0,0);
-
+      // act.setPosition(act.getPosition()[0]+1,0,0);
     });
   };
 

@@ -71,7 +71,7 @@ const getImageData = imagePath => {
 };
 let hubsImageData = getImageData('hubs.png');
 // console.log(hubsImageData)
-console.log(hubsImageData)
+// console.log(hubsImageData)
 
 // ----------------------------------------------------------------------------
 // Example code
@@ -217,3 +217,4 @@ global.ofun = ofun;
 global.renderer = renderer;
 global.renderWindow = renderWindow;
 global.hubsImageData = hubsImageData;
+global.reslicer = reslicer
