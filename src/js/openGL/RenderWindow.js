@@ -16,8 +16,8 @@ import { createContextProxyHandler } from '@kitware/vtk.js/Rendering/OpenGL/Rend
 import vtkMath from '@kitware/vtk.js/Common/Core/Math';
 
 import controlPanel from '../../controller.html';
-// import * as mat4 from '../iosWebXR/examples/libs/gl-matrix/mat4.js';
-import { mat4 } from 'gl-matrix';
+import * as mat4 from '../iosWebXR/examples/libs/gl-matrix/mat4.js';
+// import { mat4 } from 'gl-matrix';
 import * as vec3 from '../iosWebXR/examples/libs/gl-matrix/vec3.js';
 import { E } from '@kitware/vtk.js/Common/Core/Math/index';
 import XREngine from '../iosWebXR/examples/XREngine.js';
@@ -545,7 +545,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               mat4.fromTranslation(workingMatrix, workingVec3);
 
 
-              // console.log('workingMatrix',workingMatrix)//'Float32Array'
+              // // console.log('workingMatrix',workingMatrix)//'Float32Array'
               
               const anchor = frame.addAnchor(workingMatrix, model.xrReferenceSpace);
               publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
@@ -561,24 +561,24 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
                 });
               }
               if (!imageActivated && imageActivateDetection) {
-                // imageActivated = true;
-                // imageActivateDetection = false;
+                imageActivated = true;
+                imageActivateDetection = false;
       
-                // window.alert('start detect')
+              //   // window.alert('start detect')
                 xrSession.nonStandard_activateDetectionImage('hubs').then(anchor => {
                   imageActivated = false;
-                  // imageAnchor = anchor;
-                  // window.alert("in detect");
+              //     // imageAnchor = anchor;
                   rotate_matrix = anchor.modelMatrix; // length = 16
-                  var vtkRenderer = model.renderable.getRenderers()[0]
-                  var act = vtkRenderer.getVolumes()[0];
-                  // act.rotateWXYZ(45,0,0.1,0);
-                  // act.setPosition(rotate_matrix[3]+1,rotate_matrix[7],rotate_matrix[11]);
+              //     // var vtkRenderer = model.renderable.getRenderers()[0]
+              //     // var act = vtkRenderer.getVolumes()[0];
+              //     // act.rotateWXYZ(45,0,0.1,0);
+              //     // act.setPosition(rotate_matrix[3]+1,rotate_matrix[7],rotate_matrix[11]);
                   global.reslicer.setResliceAxes(rotate_matrix);
-                  // imageAnchor.addEventListener('remove', event => {
-                  // imageActivated = false;
-                  // });
-                  // engine.addAnchoredNode(imageAnchor, ducky);
+                  window.alert("in detect");
+              //     // imageAnchor.addEventListener('remove', event => {
+              //     // imageActivated = false;
+              //     // });
+              //     // engine.addAnchoredNode(imageAnchor, ducky);
                 }).catch(error => {
                   imageActivated = false;
                   console.error(`error activating ducky detection image: ${error}`);
