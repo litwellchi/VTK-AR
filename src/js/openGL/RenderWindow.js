@@ -17,8 +17,8 @@ import vtkMath from '@kitware/vtk.js/Common/Core/Math';
 
 import controlPanel from '../../controller.html';
 // import * as mat4 from '../iosWebXR/examples/libs/gl-matrix/mat4.js';
-import { mat4 } from 'gl-matrix';
-import * as vec3 from '../iosWebXR/examples/libs/gl-matrix/vec3.js';
+import { mat3,mat4 } from 'gl-matrix';
+// import * as vec3 from '../iosWebXR/examples/libs/gl-matrix/vec3.js';
 import { E } from '@kitware/vtk.js/Common/Core/Math/index';
 import XREngine from '../iosWebXR/examples/XREngine.js';
 import * as THREE from '../iosWebXR/examples/libs/three/three.js';
@@ -48,9 +48,9 @@ var DEFAULT_RESET_FACTORS = {
 
 
 const workingMatrix = mat4.create();
-const workingVec3 = vec3.create();
+const workingVec3 = mat3.create();
 
-const FPS = 30; 
+const FPS = 24; 
 const singleFrameTime = (1/FPS);
 let timeStamp = 0;
 
@@ -552,7 +552,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
 
               // // console.log('workingMatrix',workingMatrix)//'Float32Array'
               
-              const anchor = frame.addAnchor(workingMatrix, model.xrReferenceSpace);
+              const anchor = frame.addAnchor(workingMatrix, model.xrViewerReferenceSpace);
               publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
 
               if (!imageDetectionCreationRequested) {
@@ -587,12 +587,12 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
                   imageActivated = false;
               //     // imageAnchor = anchor;
                   rotate_matrix = anchor.modelMatrix; // length = 16
-              //     // var vtkRenderer = model.renderable.getRenderers()[0]
-              //     // var act = vtkRenderer.getVolumes()[0];
-              //     // act.rotateWXYZ(45,0,0.1,0);
-              //     // act.setPosition(rotate_matrix[3]+1,rotate_matrix[7],rotate_matrix[11]);
+                  var vtkRenderer = model.renderable.getRenderers()[0]
+                  var act = vtkRenderer.getVolumes()[0];
+                  // act.rotateWXYZ(45,0,0.1,0);
                   global.reslicer.setResliceAxes(rotate_matrix);
-                  // window.alert("in detect");
+                  act.setPosition(rotate_matrix[12]*1000,rotate_matrix[13]*1000,rotate_matrix[14]*1000);
+                  // window.alert(rotate_matrix);
               //     // imageAnchor.addEventListener('remove', event => {
               //     // imageActivated = false;
               //     // });

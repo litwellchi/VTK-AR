@@ -80,6 +80,7 @@ let hubsImageData = getImageData('hubs.png');
 const {
   // fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
   fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
+  // fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download',
 
 } = vtkURLExtract.extractURLParameters();
 
@@ -109,9 +110,9 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   
   mapper.setSampleDistance(sampleDistance);
   ctfun.addRGBPoint(dataRange[0], 0.0, 0.3, 0.3);
-  ctfun.addRGBPoint(dataRange[1], 1.0, 1.0, 1.0);
-  // ofun.addPoint(dataRange[0], 0.0);
-  ofun.addPoint((dataRange[1] - dataRange[0]) / 4, 0.0);
+  ctfun.addRGBPoint(dataRange[1], 1.0, 1.0, 2.0);
+  ofun.addPoint(dataRange[0], 0.0);
+  ofun.addPoint((dataRange[1] - dataRange[0]) / 10, 0.0);
   ofun.addPoint(dataRange[1], 0.5);
   // console.log(mapper.getBounds())
   actor.getProperty().setRGBTransferFunction(0, ctfun);
@@ -123,7 +124,7 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   // renderer.getActiveCamera().zoom(0.01);
   renderer.resetCamera();
   actor.setPosition([0, 0, 0])
-  // actor.setScale(0.1,0.1,0.1)
+  // actor.setScale(0.5,0.5,0.5)
   renderer.addActor(actor)
   renderWindow.render();
 
