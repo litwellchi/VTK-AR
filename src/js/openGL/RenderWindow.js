@@ -16,11 +16,12 @@ import { createContextProxyHandler } from '@kitware/vtk.js/Rendering/OpenGL/Rend
 import vtkMath from '@kitware/vtk.js/Common/Core/Math';
 
 import controlPanel from '../../controller.html';
-import * as mat4 from '../iosWebXR/examples/libs/gl-matrix/mat4.js';
-// import { mat4 } from 'gl-matrix';
+// import * as mat4 from '../iosWebXR/examples/libs/gl-matrix/mat4.js';
+import { mat4 } from 'gl-matrix';
 import * as vec3 from '../iosWebXR/examples/libs/gl-matrix/vec3.js';
 import { E } from '@kitware/vtk.js/Common/Core/Math/index';
 import XREngine from '../iosWebXR/examples/XREngine.js';
+import * as THREE from '../iosWebXR/examples/libs/three/three.js';
 
 var vtkDebugMacro = macro.vtkDebugMacro,
     vtkErrorMacro = macro.vtkErrorMacro;
@@ -48,6 +49,10 @@ var DEFAULT_RESET_FACTORS = {
 
 const workingMatrix = mat4.create();
 const workingVec3 = vec3.create();
+
+const FPS = 30; 
+const singleFrameTime = (1/FPS);
+let timeStamp = 0;
 
 let engine = null;
 let imageDetectionCreationRequested = false;
@@ -560,6 +565,19 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
                   window.alert(`error creating ducky detection image: ${error}`)
                 });
               }
+              // const this_time = clock.getMilliseconds(); //获取距离上次请求渲染的时间
+              // window.alert(this_time-timeStamp)
+              timeStamp+=10;
+              if( timeStamp/1000 > singleFrameTime){
+                imageActivateDetection = true;
+                // window.alert(timeStamp)
+                timeStamp = 0;
+              }
+              // if (timeStamp > singleFrameTime) {
+              //   timeStamp = (timeStamp % singleFrameTime);
+              //   imageActivateDetection = true;
+              // }
+              
               if (!imageActivated && imageActivateDetection) {
                 imageActivated = true;
                 imageActivateDetection = false;
@@ -574,7 +592,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               //     // act.rotateWXYZ(45,0,0.1,0);
               //     // act.setPosition(rotate_matrix[3]+1,rotate_matrix[7],rotate_matrix[11]);
                   global.reslicer.setResliceAxes(rotate_matrix);
-                  window.alert("in detect");
+                  // window.alert("in detect");
               //     // imageAnchor.addEventListener('remove', event => {
               //     // imageActivated = false;
               //     // });
