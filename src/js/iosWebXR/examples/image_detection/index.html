@@ -222,9 +222,9 @@
 					});
 				}
 
-				if (!imageActivated && imageActivateDetection) {
-					imageActivated = true;
-					imageActivateDetection = false;
+				// if (!imageActivated && imageActivateDetection) {
+				// 	imageActivated = true;
+				// 	imageActivateDetection = false;
 					session.nonStandard_activateDetectionImage(hubsImageName).then(anchor => {
 						imageActivated = false;
 						imageAnchor = anchor;
@@ -237,7 +237,7 @@
 						imageActivated = false;
 						console.error(`error activating ducky detection image: ${error}`);
 					});
-				}
+				// }
 			};
 
 			// const getImageData = imageID => {
@@ -260,7 +260,7 @@
 				context.drawImage(img, 0, 0);
 				return context.getImageData(0, 0, img.width, img.height);
 				};
-				let hubsImageData = getImageData('./heart.jpg');
+				let hubsImageData = getImageData('hubs.png');
 				// console.log(hubsImageData)
 				console.log(hubsImageData)
 

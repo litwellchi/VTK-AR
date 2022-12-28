@@ -50,7 +50,7 @@ var DEFAULT_RESET_FACTORS = {
 const workingMatrix = mat4.create();
 const workingVec3 = mat3.create();
 
-const FPS = 24; 
+const FPS = 60; 
 const singleFrameTime = (1/FPS);
 let timeStamp = 0;
 
@@ -543,41 +543,31 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               // console.log(global.hubsImageData)
               // model.xrViewerReferenceSpace viewer space
               // model.xrReferenceSpace or model.xrLocalReferenceSpace Real world space
-              mat4.copy(workingMatrix, frame.getPose(model.xrReferenceSpace, model.xrViewerReferenceSpace).transform.matrix);
-              // workingVec3 is 
-              mat4.getTranslation(workingVec3, workingMatrix);
-              // workingMatrix
-              mat4.fromTranslation(workingMatrix, workingVec3);
 
-
-              // // console.log('workingMatrix',workingMatrix)//'Float32Array'
-              
-              const anchor = frame.addAnchor(workingMatrix, model.xrViewerReferenceSpace);
-              publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
 
               if (!imageDetectionCreationRequested) {
                 imageDetectionCreationRequested=true
                 // console.log(global.hubsImageData)
                 xrSession.nonStandard_createDetectionImage('hubs', global.hubsImageData.data, global.hubsImageData.width, global.hubsImageData.height, 0.2).then(() => {
                   imageActivateDetection = true;
-                  window.alert("creat detect");
+                  // window.alert("creat detect");
                 }).catch(error => {
                   window.alert(`error creating ducky detection image: ${error}`)
                 });
+                mat4.copy(workingMatrix, frame.getPose(model.xrViewerReferenceSpace,model.xrReferenceSpace).transform.matrix);
+                // workingVec3 is 
+                mat4.getTranslation(workingVec3, workingMatrix);
+                // workingMatrix
+                mat4.fromTranslation(workingMatrix, workingVec3);
+                const anchor = frame.addAnchor(workingMatrix, model.xrReferenceSpace);
+                publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
               }
-              // const this_time = clock.getMilliseconds(); //获取距离上次请求渲染的时间
-              // window.alert(this_time-timeStamp)
-              timeStamp+=10;
+              timeStamp+=1000;
               if( timeStamp/1000 > singleFrameTime){
                 imageActivateDetection = true;
                 // window.alert(timeStamp)
                 timeStamp = 0;
-              }
-              // if (timeStamp > singleFrameTime) {
-              //   timeStamp = (timeStamp % singleFrameTime);
-              //   imageActivateDetection = true;
-              // }
-              
+              }              
               if (!imageActivated && imageActivateDetection) {
                 imageActivated = true;
                 imageActivateDetection = false;
@@ -587,16 +577,36 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
                   imageActivated = false;
               //     // imageAnchor = anchor;
                   rotate_matrix = anchor.modelMatrix; // length = 16
+                  var tmp_workmatrix = mat3.create();
                   var vtkRenderer = model.renderable.getRenderers()[0]
                   var act = vtkRenderer.getVolumes()[0];
                   // act.rotateWXYZ(45,0,0.1,0);
+                  // mat4.getTranslation(workingVec3, rotate_matrix);
+                  // // workingMatrix
+                  // mat4.fromTranslation(rotate_matrix, workingVec3);
+                  // rotate_matrix[0] = -1*rotate_matrix[0]; //z
+                  // rotate_matrix[1] = -1*rotate_matrix[1];
+                  // rotate_matrix[2] = -1*rotate_matrix[2];
+                  // rotate_matrix[4] = -1*rotate_matrix[4];
+                  // rotate_matrix[5] = -1*rotate_matrix[5];
+                  // rotate_matrix[6] = -1*rotate_matrix[6];
+                  // rotate_matrix[8] = -1*rotate_matrix[8];
+                  // rotate_matrix[9] = -1*rotate_matrix[9];
+                  // rotate_matrix[10] = -1*rotate_matrix[10];
+                  // rotate_matrix[12] = 1000*rotate_matrix[12]
+                  // rotate_matrix[13] = 1000*rotate_matrix[13]
+                  // rotate_matrix[14] = 1000*rotate_matrix[14]
+
                   global.reslicer.setResliceAxes(rotate_matrix);
-                  act.setPosition(rotate_matrix[12]*1000,rotate_matrix[13]*1000,rotate_matrix[14]*1000);
+                  // window.alert(Math.ceil(rotate_matrix[12]*1000))
+                  // act.setPosition(Math.ceil(rotate_matrix[12]),Math.ceil(rotate_matrix[13]),Math.ceil(rotate_matrix[14]));
+                  // act.setPosition(act.getPosition()[0],act.getPosition()[1]+0.3,act.getPosition()[2]);
                   // window.alert(rotate_matrix);
               //     // imageAnchor.addEventListener('remove', event => {
               //     // imageActivated = false;
               //     // });
               //     // engine.addAnchoredNode(imageAnchor, ducky);
+              publicAPI.addAnchoredNode(anchor, model.renderable.getRenderers()[0]);
                 }).catch(error => {
                   imageActivated = false;
                   console.error(`error activating ducky detection image: ${error}`);
@@ -607,7 +617,7 @@ function vtkOpenGLRenderWindow(publicAPI, model) {
               if(navigator.xr.isSessionSupported('immersive-ar')){
                 // console.log(frame)
                 // const results = frame.getImageTrackingResults();
-                interactor.updateXRScreen(xrSession, frame, model.xrReferenceSpace, model.renderable.getRenderers()[0]);
+                // interactor.updateXRScreen(xrSession, frame, model.xrReferenceSpace, model.renderable.getRenderers()[0]);
               }
               else{
                 interactor.updateXRScreen(xrSession, frame, model.xrReferenceSpace);

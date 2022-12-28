@@ -79,8 +79,8 @@ let hubsImageData = getImageData('hubs.png');
 
 const {
   // fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
-  fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
-  // fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download',
+  // fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
+  fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download'//large
 
 } = vtkURLExtract.extractURLParameters();
 
@@ -90,8 +90,9 @@ HttpDataAccessHelper.fetchBinary(fileURL).then((fileContents) => {
   console.log('vtiReader',vtiReader.toJSON())
   // Rotate 90 degrees forward so that default head volume faces camera
   const rotateX = mat4.create();
-  mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(15), [-1, 0, 0]);
+  mat4.fromRotation(rotateX, vtkMath.radiansFromDegrees(90), [-1, 0, 0]);
   reslicer.setResliceAxes(rotateX);
+  console.log(rotateX)
   
   const data = reslicer.getOutputData(0);
   const dataArray =
