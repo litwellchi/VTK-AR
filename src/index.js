@@ -79,8 +79,8 @@ let hubsImageData = getImageData('hubs.png');
 
 const {
   // fileURL = 'https://data.kitware.com/api/v1/file/624320e74acac99f42254a25/download',
-  // fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
-  fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download'//large
+  fileURL = 'https://data.kitware.com/api/v1/file/629921a64acac99f429a45a7/download',
+  // fileURL = 'https://data.kitware.com/api/v1/file/59de9dca8d777f31ac641dc2/download'//large
 
 } = vtkURLExtract.extractURLParameters();
 
